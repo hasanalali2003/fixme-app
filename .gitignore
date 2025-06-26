@@ -1,0 +1,10 @@
+# Node.js
+node_modules/
+dist/
+.env
+
+# Flutter
+build/
+.flutter-plugins
+.packages
+.pub-cache/
