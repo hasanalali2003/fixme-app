@@ -1,13 +1,34 @@
 const express = require("express");
 const connect = require("./config/db");
+const path = require("path");
+
+const general_routes = require("./routes/auth_routes").generals;
+const auth_routes = require("./routes/user_routes").authenticated;
 
 const app = express();
 const port = process.env.PORT;
+
+// Handle files to 10 MB
+app.use(express.json({ limit: "10mb" }));
+
+// Serve static files
+app.use(
+    "/uploads/images",
+    express.static(path.join(__dirname, "uploads/images"))
+);
+app.use(
+    "/uploads/voices",
+    express.static(path.join(__dirname, "uploads/voices"))
+);
 
 app.use(express.json());
 
 // Establish the database connection before starting the server
 connect();
+
+// Using routes
+app.use("/api/auth", general_routes);
+app.use("/api", auth_routes);
 
 app.listen(port, () => {
     console.log("The server is listening to port: ", port);
