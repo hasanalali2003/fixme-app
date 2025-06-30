@@ -2,8 +2,6 @@ const path = require("path");
 
 const { Request, User, Message } = require("../models/index");
 
-const uploadDir = path.join(__dirname, "uploads/messages");
-
 const getRequests = async (req, res) => {
     try {
         const userRole = await User.findById(req.userId).select("role").lean();
@@ -11,9 +9,14 @@ const getRequests = async (req, res) => {
 
         //Fetch requests for user/agent
         if (userRole.role === "user") {
-            requests = await Request.find({ created_by: req.userId });
+            requests = await Request.find({ created_by: req.userId }).sort({
+                created_at: -1,
+            });
         } else if (userRole.role === "agent") {
-            requests = await Request.find({ assigned_to: req.userId });
+            // Fetch All requests that not assigned to anyone & assigned to agent
+            requests = await Request.find({
+                $or: [{ assigned_to: req.userId }, { assigned_to: null }],
+            }).sort({ created_at: -1 });
         }
 
         //Check if there is any requests or not
@@ -86,6 +89,40 @@ const replyToRequest = async (req, res) => {
     }
 };
 
+const updateRequest = async (req, res) => {
+    try {
+        //Get request id to update it
+        const requestId = req.params.id;
+        const { subject, description, category, status, assigned_to } =
+            req.body;
+
+        const request = await Request.findById(requestId);
+
+        if (!request)
+            return res.status(404).json({ error: "Request not found." });
+
+        //Update request information
+        if (subject !== undefined && subject !== "") request.subject = subject;
+        if (description !== undefined && description !== "")
+            request.description = description;
+        if (category !== undefined && category !== "")
+            request.category = category;
+        if (status !== undefined && status !== "") request.status = status;
+        if (assigned_to !== undefined && assigned_to !== "")
+            request.assigned_to = assigned_to;
+
+        request.updated_at = new Date();
+
+        await request.save();
+
+        res.status(200).json(request);
+    } catch (err) {
+        //Send error
+        console.error(err);
+        res.status(500).json({ error: "An error happened!" });
+    }
+};
+
 const getMessages = async (req, res) => {
     try {
         //Get request id to reply to it
@@ -115,7 +152,7 @@ const uploadFile = async (req, res) => {
         const { filename, mimetype, size, path } = req.file;
 
         // Get folder name
-        let folder = "other";
+        let folder = "others";
         if (mimetype.startsWith("image/")) folder = "images";
         else if (mimetype.startsWith("audio/")) folder = "voices";
 
@@ -137,6 +174,7 @@ module.exports = {
     getRequests,
     createRequest,
     replyToRequest,
+    updateRequest,
     getMessages,
     uploadFile,
 };

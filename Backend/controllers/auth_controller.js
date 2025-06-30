@@ -9,6 +9,13 @@ const register = async (req, res) => {
         const { full_name, email, password, phone_number, birthdate, address } =
             req.body;
 
+        //Check if email already exists
+        const isExists = await User.exists({ email });
+        if (isExists) {
+            return res
+                .status(500)
+                .json({ message: "User already registered." });
+        }
         //Hashing the password before store it in the database
         const hashedPassword = await bcrypt.hash(password, 10);
 

@@ -8,9 +8,6 @@ const auth_routes = require("./routes/user_routes").authenticated;
 const app = express();
 const port = process.env.PORT;
 
-// Handle files to 10 MB
-app.use(express.json({ limit: "10mb" }));
-
 // Serve static files
 app.use(
     "/uploads/images",

@@ -4,6 +4,7 @@ const {
     getRequests,
     createRequest,
     replyToRequest,
+    updateRequest,
     getMessages,
     uploadFile,
 } = require("../controllers/user_controller");
@@ -27,6 +28,9 @@ authenticated_users.get("/requests", verifyToken, getRequests);
 
 // Reply to requests (API endpoint)
 authenticated_users.post("/requests/:id/reply", verifyToken, replyToRequest);
+
+// Reply to requests (API endpoint)
+authenticated_users.post("/requests/:id", verifyToken, updateRequest);
 
 // Fetch all messages related to a specific request (API endpoint)
 authenticated_users.get("/requests/:id/messages", verifyToken, getMessages);

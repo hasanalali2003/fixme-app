@@ -3,7 +3,7 @@ const path = require("path");
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let folder = "other";
+        let folder = "others";
         // Set different folder based on file type
         if (file.mimetype.startsWith("image/")) folder = "images";
         else if (file.mimetype.startsWith("audio/")) folder = "voices";
