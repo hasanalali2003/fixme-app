@@ -3,11 +3,16 @@ const upload = require("../middleware/multerConfig");
 const {
     getRequests,
     createRequest,
-    replyToRequest,
     updateRequest,
+    deleteRequest,
     getMessages,
     uploadFile,
-} = require("../controllers/user_controller");
+    deleteUser,
+    getCurrentUser,
+    updateUser,
+    getUsers,
+    getRequest,
+} = require("../controllers/index.js");
 const verifyToken = require("../middleware/authMiddleware");
 
 const authenticated_users = express.Router();
@@ -26,13 +31,28 @@ authenticated_users.post(
 // Fetch requests (API endpoint)
 authenticated_users.get("/requests", verifyToken, getRequests);
 
-// Reply to requests (API endpoint)
-authenticated_users.post("/requests/:id/reply", verifyToken, replyToRequest);
+// Fetch request by id (API endpoint)
+authenticated_users.get("/requests/:id", verifyToken, getRequest);
 
-// Reply to requests (API endpoint)
+// Update request (API endpoint)
 authenticated_users.post("/requests/:id", verifyToken, updateRequest);
 
+// Delete request (API endpoint)
+authenticated_users.delete("/requests/:id", verifyToken, deleteRequest);
+
 // Fetch all messages related to a specific request (API endpoint)
-authenticated_users.get("/requests/:id/messages", verifyToken, getMessages);
+authenticated_users.get("/messages/:id/", verifyToken, getMessages);
+
+// Fetch users (API endpoint)
+authenticated_users.get("/users", verifyToken, getUsers);
+
+// Fetch current user (API endpoint)
+authenticated_users.get("/users/me", verifyToken, getCurrentUser);
+
+// Delete user (API endpoint)
+authenticated_users.delete("/users/:id", verifyToken, deleteUser);
+
+// Update user (API endpoint)
+authenticated_users.post("/users/me", verifyToken, updateUser);
 
 module.exports.authenticated = authenticated_users;

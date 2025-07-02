@@ -14,9 +14,10 @@ const userSchema = new mongoose.Schema({
         required: true,
     },
     avatar_url: { type: String, required: false },
+    fields: { type: [String], required: false },
     isOnline: { type: Boolean, required: false, default: false },
-    createdAt: { type: Date, required: true, default: new Date() },
-    updatedAt: { type: Date, required: false, default: new Date() },
+    created_at: { type: Date, required: true, default: new Date() },
+    updated_at: { type: Date, required: false, default: new Date() },
 });
 
 module.exports = mongoose.model("User", userSchema);

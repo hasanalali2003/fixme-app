@@ -1,147 +1,6 @@
-const path = require("path");
+const bcrypt = require("bcrypt");
 
-const { Request, User, Message } = require("../models/index");
-
-const getRequests = async (req, res) => {
-    try {
-        const userRole = await User.findById(req.userId).select("role").lean();
-        let requests;
-
-        //Fetch requests for user/agent
-        if (userRole.role === "user") {
-            requests = await Request.find({ created_by: req.userId }).sort({
-                created_at: -1,
-            });
-        } else if (userRole.role === "agent") {
-            // Fetch All requests that not assigned to anyone & assigned to agent
-            requests = await Request.find({
-                $or: [{ assigned_to: req.userId }, { assigned_to: null }],
-            }).sort({ created_at: -1 });
-        }
-
-        //Check if there is any requests or not
-        if (requests.length === 0)
-            return res.status(404).json({ message: "There is no requests!" });
-
-        //Send the count of requests and every request
-        res.status(201).json({ count: requests.length, requests });
-    } catch (err) {
-        //Handling any error
-        res.status(500).json({
-            message: "An error happened while fetching the requests.",
-            error: err._message,
-        });
-    }
-};
-
-const createRequest = async (req, res) => {
-    try {
-        const { subject, description, category } = req.body;
-        const created_by = req.userId;
-
-        //Create new request & save it
-        const request = await new Request({
-            subject,
-            description,
-            category,
-            created_by,
-        });
-        await request.save();
-
-        //Send message if request created successfully
-        res.status(201).json(request);
-    } catch (err) {
-        //Send error
-        console.error(err);
-        res.status(500).json({ error: "An error happened." });
-    }
-};
-
-const replyToRequest = async (req, res) => {
-    try {
-        //Get request id to reply to it
-        const requestId = req.params.id;
-
-        //check if the request is exists
-        const requestExists = await Request.exists({ _id: requestId });
-        if (!requestExists)
-            return res.status(404).json({ error: "request not found!" });
-
-        //Message details & Message save
-        const { type, content, attachments } = req.body;
-        const userId = req.userId;
-        const sender_id = userId;
-
-        const message = await new Message({
-            requestId,
-            sender_id,
-            type,
-            content,
-            attachments,
-        });
-        await message.save();
-
-        res.status(201).json(message);
-    } catch (err) {
-        //Send error
-        console.error(err);
-        res.status(500).json({ error: "An error happened!" });
-    }
-};
-
-const updateRequest = async (req, res) => {
-    try {
-        //Get request id to update it
-        const requestId = req.params.id;
-        const { subject, description, category, status, assigned_to } =
-            req.body;
-
-        const request = await Request.findById(requestId);
-
-        if (!request)
-            return res.status(404).json({ error: "Request not found." });
-
-        //Update request information
-        if (subject !== undefined && subject !== "") request.subject = subject;
-        if (description !== undefined && description !== "")
-            request.description = description;
-        if (category !== undefined && category !== "")
-            request.category = category;
-        if (status !== undefined && status !== "") request.status = status;
-        if (assigned_to !== undefined && assigned_to !== "")
-            request.assigned_to = assigned_to;
-
-        request.updated_at = new Date();
-
-        await request.save();
-
-        res.status(200).json(request);
-    } catch (err) {
-        //Send error
-        console.error(err);
-        res.status(500).json({ error: "An error happened!" });
-    }
-};
-
-const getMessages = async (req, res) => {
-    try {
-        //Get request id to reply to it
-        const request_id = req.params.id;
-
-        //check if the request is exists
-        const requestExists = await Request.exists({ _id: request_id });
-        if (!requestExists)
-            return res.status(404).json({ error: "request not found!" });
-
-        //Get all messages for requests (Read-Only)
-        const messages = await Message.find({ request_id }).lean();
-        res.status(200).json({ count: messages.length, messages });
-    } catch (err) {
-        //Send error
-        console.error(err);
-        res.status(500).json({ error: "An error happened!" });
-    }
-};
+const { User, Message } = require("../models/index");
 
 const uploadFile = async (req, res) => {
     try {
@@ -170,11 +29,113 @@ const uploadFile = async (req, res) => {
     }
 };
 
+const getUsers = async (req, res) => {
+    try {
+        // Fetch all users
+        users = await User.find().lean();
+
+        // Check if there is any users or not
+        if (users.length === 0)
+            return res.status(404).json({ message: "There is no users!" });
+
+        //Send the count of users and every user
+        res.status(201).json({ count: users.length, users });
+    } catch (err) {
+        //Handling any error
+        res.status(500).json({
+            message: "An error happened while fetching the users.",
+            error: err._message,
+        });
+    }
+};
+
+const getCurrentUser = async (req, res) => {
+    try {
+        // Fetch current user.
+        const user = await User.findById(req.userId).lean();
+        //Send the user profile.
+        res.status(201).json(user);
+    } catch (err) {
+        //Handling any error
+        res.status(500).json({
+            message: "An error happened while fetching the user.",
+            error: err._message,
+        });
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params.id;
+        // Check if user is exists
+        const isExists = await User.exists({ id: userId });
+        if (isExists) {
+            // Delete the user from the database.
+            await User.findOneAndDelete({ id: userId });
+            return res
+                .status(200)
+                .json({ message: "User deleted successfully." });
+        }
+        res.status(404).json({ message: "User not found." });
+    } catch (err) {
+        //Send error
+        console.error(err);
+        res.status(500).json({ error: "An error happened!" });
+    }
+};
+
+const updateUser = async (req, res) => {
+    try {
+        //Get user id to update it
+        const userId = req.userId;
+        const {
+            full_name,
+            phone_number,
+            birthdate,
+            password,
+            address,
+            avatar_url,
+            role,
+            isOnline,
+        } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) return res.status(404).json({ error: "User not found." });
+
+        //Update user information
+        if (full_name !== undefined && full_name !== "")
+            user.full_name = full_name;
+        if (phone_number !== undefined && phone_number !== "")
+            user.phone_number = phone_number;
+        if (birthdate !== undefined && birthdate !== "")
+            user.birthdate = birthdate;
+        if (password !== undefined && password !== "") {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            user.password = hashedPassword;
+        }
+        if (address !== undefined && address !== "") user.address = address;
+        if (avatar_url !== undefined && avatar_url !== "")
+            user.avatar_url = avatar_url;
+        if (role !== undefined && role !== "") user.role = role;
+        if (isOnline !== undefined && isOnline !== "") user.isOnline = isOnline;
+
+        user.updated_at = new Date();
+
+        await user.save();
+
+        res.status(200).json(user);
+    } catch (err) {
+        //Send error
+        console.error(err);
+        res.status(500).json({ error: "An error happened!" });
+    }
+};
+
 module.exports = {
-    getRequests,
-    createRequest,
-    replyToRequest,
-    updateRequest,
-    getMessages,
     uploadFile,
+    getUsers,
+    updateUser,
+    deleteUser,
+    getCurrentUser,
 };
