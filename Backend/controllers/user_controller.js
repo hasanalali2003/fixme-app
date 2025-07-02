@@ -86,47 +86,41 @@ const deleteUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        //Get user id to update it
         const userId = req.userId;
-        const {
-            full_name,
-            phone_number,
-            birthdate,
-            password,
-            address,
-            avatar_url,
-            role,
-            isOnline,
-        } = req.body;
+        const updates = req.body;
 
         const user = await User.findById(userId);
-
         if (!user) return res.status(404).json({ error: "User not found." });
 
-        //Update user information
-        if (full_name !== undefined && full_name !== "")
-            user.full_name = full_name;
-        if (phone_number !== undefined && phone_number !== "")
-            user.phone_number = phone_number;
-        if (birthdate !== undefined && birthdate !== "")
-            user.birthdate = birthdate;
-        if (password !== undefined && password !== "") {
-            const hashedPassword = await bcrypt.hash(password, 10);
+        const updatableFields = [
+            "full_name",
+            "phone_number",
+            "birthdate",
+            "address",
+            "avatar_url",
+            "role",
+            "fields",
+            "isOnline",
+        ];
+
+        // Update normal fields
+        updatableFields.forEach((field) => {
+            if (updates[field] !== undefined && updates[field] !== "") {
+                user[field] = updates[field];
+            }
+        });
+
+        // Handle password separately
+        if (updates.password !== undefined && updates.password !== "") {
+            const hashedPassword = await bcrypt.hash(updates.password, 10);
             user.password = hashedPassword;
         }
-        if (address !== undefined && address !== "") user.address = address;
-        if (avatar_url !== undefined && avatar_url !== "")
-            user.avatar_url = avatar_url;
-        if (role !== undefined && role !== "") user.role = role;
-        if (isOnline !== undefined && isOnline !== "") user.isOnline = isOnline;
 
         user.updated_at = new Date();
-
         await user.save();
 
         res.status(200).json(user);
     } catch (err) {
-        //Send error
         console.error(err);
         res.status(500).json({ error: "An error happened!" });
     }

@@ -9,8 +9,8 @@ const userSchema = new mongoose.Schema({
     address: { type: String, required: true },
     role: {
         type: String,
-        enum: ["user", "agent", "admin"],
-        default: "user",
+        enum: ["client", "agent", "admin"],
+        default: "client",
         required: true,
     },
     avatar_url: { type: String, required: false },

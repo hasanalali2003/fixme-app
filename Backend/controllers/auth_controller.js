@@ -29,9 +29,15 @@ const register = async (req, res) => {
             address,
         });
         await user.save();
-
+        //Sign the authentication token
+        const token = jwt.sign({ userId: user._id }, JWTSecret, {
+            expiresIn: JWTExpiresIn,
+        });
         //Send message if user register has done
-        res.status(201).json({ message: "User registerd successfully!" });
+        res.status(201).json({
+            message: "User registerd successfully!",
+            token,
+        });
     } catch (err) {
         res.status(500).json({
             message: "An unexpected error occurred. Please try again later.",

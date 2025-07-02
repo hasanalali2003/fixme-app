@@ -5,8 +5,8 @@ const getRequests = async (req, res) => {
         const userRole = await User.findById(req.userId).select("role").lean();
         let requests;
 
-        //Fetch requests for user/agent
-        if (userRole.role === "user") {
+        //Fetch requests for client/agent
+        if (userRole.role === "client") {
             requests = await Request.find({ created_by: req.userId }).sort({
                 created_at: -1,
             });
@@ -75,8 +75,15 @@ const updateRequest = async (req, res) => {
     try {
         //Get request id to update it
         const requestId = req.params.id;
-        const { subject, description, category, status, assigned_to } =
-            req.body;
+        const updates = reg.body;
+
+        const updatableFields = [
+            "subject",
+            "description",
+            "category",
+            "status",
+            "assigned_to",
+        ];
 
         const request = await Request.findById(requestId);
 
@@ -84,14 +91,11 @@ const updateRequest = async (req, res) => {
             return res.status(404).json({ error: "Request not found." });
 
         //Update request information
-        if (subject !== undefined && subject !== "") request.subject = subject;
-        if (description !== undefined && description !== "")
-            request.description = description;
-        if (category !== undefined && category !== "")
-            request.category = category;
-        if (status !== undefined && status !== "") request.status = status;
-        if (assigned_to !== undefined && assigned_to !== "")
-            request.assigned_to = assigned_to;
+        updatableFields.forEach((field) => {
+            if (updates[field] !== undefined && updates[field] !== "") {
+                request[field] = updates[field];
+            }
+        });
 
         request.updated_at = new Date();
 
