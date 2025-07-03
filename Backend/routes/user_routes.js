@@ -11,7 +11,7 @@ const {
     getCurrentUser,
     updateUser,
     getUsers,
-    getRequest,
+    getRequestByID,
 } = require("../controllers/index.js");
 const verifyToken = require("../middleware/authMiddleware");
 
@@ -28,11 +28,11 @@ authenticated_users.post(
     uploadFile
 );
 
-// Fetch requests (API endpoint)
-authenticated_users.get("/requests", verifyToken, getRequests);
+// Fetch requests for current user (API endpoint)
+authenticated_users.get("/requests/me", verifyToken, getRequests);
 
 // Fetch request by id (API endpoint)
-authenticated_users.get("/requests/:id", verifyToken, getRequest);
+authenticated_users.get("/requests/:id", verifyToken, getRequestByID);
 
 // Update request (API endpoint)
 authenticated_users.post("/requests/:id", verifyToken, updateRequest);

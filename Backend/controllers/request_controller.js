@@ -32,7 +32,7 @@ const getRequests = async (req, res) => {
     }
 };
 
-const getRequest = async (req, res) => {
+const getRequestByID = async (req, res) => {
     try {
         const request = await Request.findById(req.params.id).lean();
         if (!request)
@@ -63,7 +63,10 @@ const createRequest = async (req, res) => {
         await request.save();
 
         //Send message if request created successfully
-        res.status(201).json(request);
+        res.status(201).json({
+            message: "Request created successfully",
+            request,
+        });
     } catch (err) {
         //Send error
         console.error(err);
@@ -101,7 +104,10 @@ const updateRequest = async (req, res) => {
 
         await request.save();
 
-        res.status(200).json(request);
+        res.status(200).json({
+            message: "Request updated successfully",
+            request,
+        });
     } catch (err) {
         //Send error
         console.error(err);
@@ -134,5 +140,5 @@ module.exports = {
     createRequest,
     updateRequest,
     deleteRequest,
-    getRequest,
+    getRequestByID,
 };
