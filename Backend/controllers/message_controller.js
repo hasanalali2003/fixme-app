@@ -1,5 +1,6 @@
 const { Request, Message } = require("../models/index");
 
+// @route   POST /api/messages/:id
 const getMessages = async (req, res) => {
     try {
         //Get request id to reply to it

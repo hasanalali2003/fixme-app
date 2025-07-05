@@ -1,5 +1,6 @@
 const { Request, User } = require("../models/index");
 
+// @route   GET /api/requests
 const getRequests = async (req, res) => {
     try {
         const userRole = await User.findById(req.userId).select("role").lean();
@@ -32,6 +33,7 @@ const getRequests = async (req, res) => {
     }
 };
 
+// @route   GET /api/requests/:id
 const getRequestByID = async (req, res) => {
     try {
         const request = await Request.findById(req.params.id).lean();
@@ -48,6 +50,7 @@ const getRequestByID = async (req, res) => {
     }
 };
 
+// @route   POST /api/requests/
 const createRequest = async (req, res) => {
     try {
         const { subject, description, category } = req.body;
@@ -74,6 +77,7 @@ const createRequest = async (req, res) => {
     }
 };
 
+// @route   POST /api/requests/:id
 const updateRequest = async (req, res) => {
     try {
         //Get request id to update it
@@ -115,6 +119,7 @@ const updateRequest = async (req, res) => {
     }
 };
 
+// @route   DELETE /api/requests/:id
 const deleteRequest = async (req, res) => {
     try {
         const { requestId } = req.params.id;

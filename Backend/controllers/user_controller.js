@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 
-const { User, Message } = require("../models/index");
+const { User, DeviceToken } = require("../models/index");
 
+// @route   POST /api/upload
 const uploadFile = async (req, res) => {
     try {
         if (!req.file) {
@@ -29,6 +30,7 @@ const uploadFile = async (req, res) => {
     }
 };
 
+// @route   GET /api/users
 const getUsers = async (req, res) => {
     try {
         // Fetch all users
@@ -49,6 +51,7 @@ const getUsers = async (req, res) => {
     }
 };
 
+// @route   GET /api/users/me
 const getCurrentUser = async (req, res) => {
     try {
         // Fetch current user.
@@ -64,6 +67,7 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
+// @route   DELETE /api/users/:id
 const deleteUser = async (req, res) => {
     try {
         const { userId } = req.params.id;
@@ -84,6 +88,7 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// @route   POST /api/users/me
 const updateUser = async (req, res) => {
     try {
         const userId = req.userId;
@@ -99,7 +104,7 @@ const updateUser = async (req, res) => {
             "address",
             "avatar_url",
             "role",
-            "fields",
+            "topics",
             "isOnline",
         ];
 
@@ -119,10 +124,14 @@ const updateUser = async (req, res) => {
         user.updated_at = new Date();
         await user.save();
 
+        await DeviceToken.findOneAndUpdate(
+            { userId: String(userId) },
+            { userTopics: user.topics }
+        );
         res.status(200).json(user);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "An error happened!" });
+        res.status(500).json({ message: "An error happened!", error: err });
     }
 };
 
