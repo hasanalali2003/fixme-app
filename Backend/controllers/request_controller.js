@@ -139,6 +139,49 @@ const deleteRequest = async (req, res) => {
         res.status(500).json({ error: "An error happened!" });
     }
 };
+// @route   POST /api/requests/:id/assign
+const assignAgentToRequest = async (req, res) => {
+    try {
+        const requestId = req.params.id;
+        const { agent_id } = req.body;
+
+        if (!agent_id) {
+            return res
+                .status(400)
+                .json({ error: "agent_id (agent ID) is required" });
+        }
+
+        // 1. Verify agent exists in users collection
+        const agent = await User.findById(agent_id);
+        if (!agent) {
+            return res.status(404).json({ error: "Agent (user) not found" });
+        }
+
+        // (Optional) Check if user is actually an agent
+        // if (agent.role !== "agent") {
+        //   return res.status(403).json({ error: "User is not an agent" });
+        // }
+
+        // 2. Verify request exists
+        const request = await Request.findById(requestId);
+        if (!request) {
+            return res.status(404).json({ error: "Request not found" });
+        }
+
+        // 3. Assign agent
+        request.assigned_to = agent_id;
+        request.updated_at = new Date();
+        await request.save();
+
+        res.status(200).json({
+            message: "Agent assigned successfully",
+            request,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "An error happened!" });
+    }
+};
 
 module.exports = {
     getRequests,
@@ -146,4 +189,5 @@ module.exports = {
     updateRequest,
     deleteRequest,
     getRequestByID,
+    assignAgentToRequest,
 };

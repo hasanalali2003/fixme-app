@@ -51,6 +51,35 @@ const getUsers = async (req, res) => {
     }
 };
 
+// @route   GET /api/users/online
+// @desc    Get all online agents, optionally filtered by topic
+
+const getOnlineAgents = async (req, res) => {
+    try {
+        const { topic } = req.query;
+
+        // Build the query object
+        const query = {
+            role: "agent", // Assuming agents have role "agent"
+            topics: topic,
+        };
+        const agents = await User.find(query).sort({ isOnline: -1 }).lean();
+        console.log(agents);
+        console.log(query);
+
+        if (agents.length === 0) {
+            return res.status(404).json({ message: "No online agents found." });
+        }
+
+        res.status(200).json({ count: agents.length, agents });
+    } catch (err) {
+        res.status(500).json({
+            message: "An error occurred while fetching online agents.",
+            error: err.message,
+        });
+    }
+};
+
 // @route   GET /api/users/me
 const getCurrentUser = async (req, res) => {
     try {
@@ -138,6 +167,7 @@ const updateUser = async (req, res) => {
 module.exports = {
     uploadFile,
     getUsers,
+    getOnlineAgents,
     updateUser,
     deleteUser,
     getCurrentUser,
