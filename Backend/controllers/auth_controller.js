@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { JWTSecret, JWTExpiresIn } = require("../config/index");
-
+const { checkToken } = require("../middleware/authMiddleware");
 const { User, DeviceToken } = require("../models/index");
 // @route   POST /api/auth/register
 const register = async (req, res) => {
@@ -118,8 +118,23 @@ const registerDeviceToken = async (req, res) => {
     }
 };
 
+// @route   POST /api/auth/verfiy
+const tokenVerfiy = async (req, res) => {
+    const { token } = req.body;
+    if (checkToken(token)) {
+        return res.status(200).json({
+            message: "The token is valid",
+        });
+    } else {
+        return res.status(403).json({
+            message: "The token is invaild",
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
     registerDeviceToken,
+    tokenVerfiy,
 };

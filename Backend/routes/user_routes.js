@@ -16,7 +16,7 @@ const {
     getPaginatedMessages,
     assignAgentToRequest,
 } = require("../controllers/index.js");
-const verifyToken = require("../middleware/authMiddleware");
+const { verifyToken } = require("../middleware/authMiddleware");
 
 const authenticated_users = express.Router();
 
