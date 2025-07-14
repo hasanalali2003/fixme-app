@@ -11,9 +11,12 @@ const {
     getCurrentUser,
     updateUser,
     getUsers,
+    getOnlineAgents,
     getRequestByID,
+    getPaginatedMessages,
+    assignAgentToRequest,
 } = require("../controllers/index.js");
-const verifyToken = require("../middleware/authMiddleware");
+const { verifyToken } = require("../middleware/authMiddleware");
 
 const authenticated_users = express.Router();
 
@@ -40,11 +43,28 @@ authenticated_users.post("/requests/:id", verifyToken, updateRequest);
 // Delete request (API endpoint)
 authenticated_users.delete("/requests/:id", verifyToken, deleteRequest);
 
+// Assign request to agent (API endpoint)
+authenticated_users.post(
+    "/requests/:id/assign",
+    verifyToken,
+    assignAgentToRequest
+);
+
 // Fetch all messages related to a specific request (API endpoint)
 authenticated_users.get("/messages/:id/", verifyToken, getMessages);
 
+// Fetch messages with Pagination related to a specific request (API endpoint)
+authenticated_users.get(
+    "/messages/:id/paginated",
+    verifyToken,
+    getPaginatedMessages
+);
+
 // Fetch users (API endpoint)
 authenticated_users.get("/users", verifyToken, getUsers);
+
+// Fetch users/agent who is online and filterd by topic (API endpoint)
+authenticated_users.get("/users/online", verifyToken, getOnlineAgents);
 
 // Fetch current user (API endpoint)
 authenticated_users.get("/users/me", verifyToken, getCurrentUser);

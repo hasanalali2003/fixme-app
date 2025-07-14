@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { JWTSecret, JWTExpiresIn } = require("../config/index");
-
-const { User } = require("../models/index");
+const { checkToken } = require("../middleware/authMiddleware");
+const { User, DeviceToken } = require("../models/index");
 // @route   POST /api/auth/register
 const register = async (req, res) => {
     try {
@@ -85,7 +85,56 @@ const login = async (req, res) => {
     }
 };
 
+// @route   POST /api/auth/register-token
+const registerDeviceToken = async (req, res) => {
+    try {
+        const { userId, token } = req.body;
+        // Check if body not empty
+        if (!userId || !token) {
+            return res
+                .status(400)
+                .json({ error: "userId and token are required" });
+        }
+
+        const user = await User.findById(userId);
+        console.log(user);
+        // Upsert logic: update if exists, otherwise create new
+        const result = await DeviceToken.findOneAndUpdate(
+            { userId }, // Find by userId
+            { token, userTopics: user.topics || [] }, // Update token
+            { new: true, upsert: true } // Create if not found
+        );
+
+        res.status(200).json({
+            message: "Token registerd/updated successfully!",
+            result,
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: "An unexpected error occurred. Please try again later.",
+            error: err._message,
+        });
+    }
+};
+
+// @route   POST /api/auth/verfiy
+const tokenVerfiy = async (req, res) => {
+    const { token } = req.body;
+    if (checkToken(token)) {
+        return res.status(200).json({
+            message: "The token is valid",
+        });
+    } else {
+        return res.status(403).json({
+            message: "The token is invaild",
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
+    registerDeviceToken,
+    tokenVerfiy,
 };

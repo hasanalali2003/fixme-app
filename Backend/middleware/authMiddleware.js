@@ -16,4 +16,12 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-module.exports = verifyToken;
+const checkToken = (token) => {
+    try {
+        const decoded = jwt.verify(token, JWTSecret);
+        return true;
+    } catch (err) {
+        return false;
+    }
+};
+module.exports = { verifyToken, checkToken };

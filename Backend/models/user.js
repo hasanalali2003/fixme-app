@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
         required: true,
     },
     avatar_url: { type: String, required: false },
-    fields: { type: [String], required: false },
+    topics: { type: [String], required: false, default: [] },
     isOnline: { type: Boolean, required: false, default: false },
     created_at: { type: Date, required: true, default: new Date() },
     updated_at: { type: Date, required: false, default: new Date() },
