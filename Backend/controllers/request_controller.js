@@ -82,7 +82,7 @@ const updateRequest = async (req, res) => {
     try {
         //Get request id to update it
         const requestId = req.params.id;
-        const updates = reg.body;
+        const updates = req.body;
 
         const updatableFields = [
             "subject",
