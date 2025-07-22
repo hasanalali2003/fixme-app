@@ -5,7 +5,6 @@ const {
     createRequest,
     updateRequest,
     deleteRequest,
-    getMessages,
     uploadFile,
     deleteUser,
     getCurrentUser,
@@ -13,8 +12,9 @@ const {
     getUsers,
     getOnlineAgents,
     getRequestByID,
-    getPaginatedMessages,
     assignAgentToRequest,
+    getConversationsByRequestId,
+    getConversationMessages,
 } = require("../controllers/index.js");
 const { verifyToken } = require("../middleware/authMiddleware");
 
@@ -50,14 +50,18 @@ authenticated_users.post(
     assignAgentToRequest
 );
 
-// Fetch all messages related to a specific request (API endpoint)
-authenticated_users.get("/messages/:id/", verifyToken, getMessages);
-
-// Fetch messages with Pagination related to a specific request (API endpoint)
+// Fetch all conversations related to a specific request (API endpoint)
 authenticated_users.get(
-    "/messages/:id/paginated",
+    "/messages/conversations/:requestId",
     verifyToken,
-    getPaginatedMessages
+    getConversationsByRequestId
+);
+
+// Fetch messages with Pagination related to a specific conversation (API endpoint)
+authenticated_users.get(
+    "/messages/conversation",
+    verifyToken,
+    getConversationMessages
 );
 
 // Fetch users (API endpoint)
