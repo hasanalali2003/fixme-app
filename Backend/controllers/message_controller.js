@@ -1,61 +1,94 @@
-const { Request, Message } = require("../models/index");
+const { Request, Message, User } = require("../models/index");
+const mongoose = require("mongoose");
 
-// @route   POST /api/messages/:id
-const getMessages = async (req, res) => {
+// @route   GET /api/messages/conversations/:requestId
+const getConversationsByRequestId = async (req, res) => {
+    const { requestId } = req.params;
+
     try {
-        //Get request id to reply to it
-        const request_id = req.params.id;
+        // Fetch total message count (for this request)
+        const totalMessages = await Message.countDocuments({
+            request_id: requestId,
+        });
+        // Fetch paginated messages
+        const messages = await Message.find({ request_id: requestId }).sort({
+            created_at: -1,
+        });
 
-        //check if the request is exists
-        const requestExists = await Request.exists({ _id: request_id });
-        if (!requestExists)
-            return res.status(404).json({ error: "request not found!" });
+        // Group messages by sender-receiver pair
+        const conversationsMap = new Map();
 
-        //Get all messages for requests (Read-Only)
-        const messages = await Message.find({ request_id }).lean();
-        res.status(200).json({ count: messages.length, messages });
-    } catch (err) {
-        //Send error
-        console.error(err);
-        res.status(500).json({ error: "An error happened!" });
+        for (const msg of messages) {
+            const sender = msg.sender_id.toString() || "unknown";
+            const receiver = msg.receiver_id.toString() || "unknown";
+
+            const key1 = `${sender}_${receiver}`;
+            const key2 = `${receiver}_${sender}`;
+            const conversationKey = conversationsMap.has(key2) ? key2 : key1;
+
+            if (!conversationsMap.has(conversationKey)) {
+                conversationsMap.set(conversationKey, []);
+            }
+
+            conversationsMap.get(conversationKey).push(msg);
+        }
+        const conversations = Array.from(conversationsMap.values());
+
+        return res.status(200).json({
+            totalMessages,
+            conversationsCount: conversations.length,
+            conversations,
+        });
+    } catch (error) {
+        console.error("Error fetching conversations:", error);
+        return res.status(500).json({ error: "Server error" });
     }
 };
 
-// @route   GET /api/messages/:id/paginated?page=1&limit=10
-const getPaginatedMessages = async (req, res) => {
+// @route   GET /api/messages/conversation
+const getConversationMessages = async (req, res) => {
+    const { requestId, user1, user2, page = 1, limit = 20 } = req.query;
+
+    if (!requestId || !user1 || !user2) {
+        return res.status(400).json({ error: "Missing required query params" });
+    }
+
     try {
-        const request_id = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Check if the request exists
-        const requestExists = await Request.exists({ _id: request_id });
-        if (!requestExists)
-            return res.status(404).json({ error: "Request not found!" });
+        const [uid1, uid2] = [user1, user2];
 
-        // Count total messages
-        const totalMessages = await Message.countDocuments(request_id);
+        const query = {
+            request_id: requestId,
+            $or: [
+                { sender_id: uid1, receiver_id: uid2 },
+                { sender_id: uid2, receiver_id: uid1 },
+            ],
+        };
 
-        // Get paginated messages (newest first)
-        const messages = await Message.find({ request_id })
-            .sort({ createdAt: -1 }) // newest messages first
+        const totalMessages = await Message.countDocuments(query);
+
+        const messages = await Message.find(query)
+            .sort({ created_at: -1 }) // newest first
             .skip(skip)
-            .limit(limit)
-            .lean();
+            .limit(parseInt(limit))
+            .populate("sender_id", "full_name _id")
+            .populate("receiver_id", "full_name _id");
 
         res.status(200).json({
-            page,
-            limit,
-            totalPages: Math.ceil(totalMessages / limit),
+            page: parseInt(page),
+            limit: parseInt(limit),
             totalMessages,
-            count: messages.length,
+            totalPages: Math.ceil(totalMessages / limit),
             messages,
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "An error happened!" });
+    } catch (error) {
+        console.error("Error fetching conversation messages:", error);
+        res.status(500).json({ error: "Server error" });
     }
 };
 
-module.exports = { getMessages, getPaginatedMessages };
+module.exports = {
+    getConversationsByRequestId,
+    getConversationMessages,
+};
