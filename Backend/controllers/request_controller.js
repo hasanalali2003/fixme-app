@@ -124,10 +124,10 @@ const deleteRequest = async (req, res) => {
     try {
         const { requestId } = req.params.id;
         // Check if request is exists
-        const isExists = await Request.exists({ id: requestId });
+        const isExists = await Request.exists({ _id: requestId });
         if (isExists) {
             // Delete the request from the database.
-            const deleteResult = await Request.findOneAndDelete({ id: requestId });
+            const deleteResult = await Request.findOneAndDelete({ _id: requestId });
             return res
                 .status(200)
                 .json({ message: "Request deleted successfully." });
