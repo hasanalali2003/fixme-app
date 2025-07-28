@@ -127,7 +127,7 @@ const deleteRequest = async (req, res) => {
         const isExists = await Request.exists({ id: requestId });
         if (isExists) {
             // Delete the request from the database.
-            const delete = await Request.findOneAndDelete({ id: requestId });
+            const deleteResult = await Request.findOneAndDelete({ id: requestId });
             return res
                 .status(200)
                 .json({ message: "Request deleted successfully." });
