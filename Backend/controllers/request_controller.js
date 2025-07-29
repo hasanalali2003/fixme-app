@@ -122,12 +122,13 @@ const updateRequest = async (req, res) => {
 // @route   DELETE /api/requests/:id
 const deleteRequest = async (req, res) => {
     try {
-        const { requestId } = req.params.id;
+        const requestId = req.params.id;
+
         // Check if request is exists
-        const isExists = await Request.exists({ id: requestId });
+        const isExists = await Request.exists({ _id: requestId });
         if (isExists) {
             // Delete the request from the database.
-            await Request.findOneAndDelete({ id: requestId });
+            await Request.findOneAndDelete({ _id: requestId });
             return res
                 .status(200)
                 .json({ message: "Request deleted successfully." });

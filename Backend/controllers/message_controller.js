@@ -25,23 +25,23 @@ const getConversationsByRequestId = async (req, res) => {
             const key1 = `${sender}_${receiver}`;
             const key2 = `${receiver}_${sender}`;
             const conversationKey = conversationsMap.has(key2) ? key2 : key1;
-
+            //console.log(conversationKey);
             if (!conversationsMap.has(conversationKey)) {
-                conversationsMap.set(conversationKey, []);
+                conversationsMap.set(conversationKey, msg);
             }
 
-            conversationsMap.get(conversationKey).push(msg);
+            //conversationsMap.get(conversationKey).push(msg);
         }
         const conversations = Array.from(conversationsMap.values());
 
         return res.status(200).json({
             totalMessages,
             conversationsCount: conversations.length,
-            conversations,
+            lastMessages: conversations,
         });
-    } catch (error) {
-        console.error("Error fetching conversations:", error);
-        return res.status(500).json({ error: "Server error" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
     }
 };
 
