@@ -122,7 +122,8 @@ const updateRequest = async (req, res) => {
 // @route   DELETE /api/requests/:id
 const deleteRequest = async (req, res) => {
     try {
-        const { requestId } = req.params.id;
+        const requestId = req.params.id;
+
         // Check if request is exists
         const isExists = await Request.exists({ _id: requestId });
         if (isExists) {
