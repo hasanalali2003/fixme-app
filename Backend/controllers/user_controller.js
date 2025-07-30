@@ -34,7 +34,7 @@ const uploadFile = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         // Fetch all users
-        users = await User.find().lean();
+        const users = await User.find().lean();
 
         // Check if there is any users or not
         if (users.length === 0)
@@ -64,8 +64,6 @@ const getOnlineAgents = async (req, res) => {
             topics: topic,
         };
         const agents = await User.find(query).sort({ isOnline: -1 }).lean();
-        console.log(agents);
-        console.log(query);
 
         if (agents.length === 0) {
             return res.status(404).json({ message: "No online agents found." });
@@ -96,10 +94,27 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
+// @route   GET /api/users/:id
+const getUserById = async (req, res) => {
+    try {
+        // Fetch current user.
+        const userId = req.params.id;
+        const user = await User.findById(userId).lean();
+        //Send the user profile.
+        res.status(201).json(user);
+    } catch (err) {
+        //Handling any error
+        res.status(500).json({
+            message: "An error happened while fetching the user.",
+            error: err._message,
+        });
+    }
+};
+
 // @route   DELETE /api/users/:id
 const deleteUser = async (req, res) => {
     try {
-        const { userId } = req.params.id;
+        const userId = req.params.id;
         // Check if user is exists
         const isExists = await User.exists({ id: userId });
         if (isExists) {
@@ -171,4 +186,5 @@ module.exports = {
     updateUser,
     deleteUser,
     getCurrentUser,
+    getUserById,
 };

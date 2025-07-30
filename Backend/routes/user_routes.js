@@ -15,6 +15,7 @@ const {
     assignAgentToRequest,
     getConversationsByRequestId,
     getConversationMessages,
+    getUserById,
 } = require("../controllers/index.js");
 const { verifyToken } = require("../middleware/authMiddleware");
 
@@ -66,6 +67,9 @@ authenticated_users.get(
 
 // Fetch users (API endpoint)
 authenticated_users.get("/users", verifyToken, getUsers);
+
+// Fetch users (API endpoint)
+authenticated_users.get("/users/:id", verifyToken, getUserById);
 
 // Fetch users/agent who is online and filterd by topic (API endpoint)
 authenticated_users.get("/users/online", verifyToken, getOnlineAgents);
