@@ -116,10 +116,10 @@ const deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
         // Check if user is exists
-        const isExists = await User.exists({ id: userId });
+        const isExists = await User.exists({ _id: userId });
         if (isExists) {
             // Delete the user from the database.
-            await User.findOneAndDelete({ id: userId });
+            await User.findOneAndDelete({ _id: userId });
             return res
                 .status(200)
                 .json({ message: "User deleted successfully." });
